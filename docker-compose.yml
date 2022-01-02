@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  go-http-server:
+    container_name: go-http-server
+    build: .
+    command: go run server.go
+    image: rainan/go-http-server:latest
+    ports:
+      - "3000:3000"
