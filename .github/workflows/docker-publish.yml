@@ -101,5 +101,5 @@ jobs:
           COSIGN_PASSWORD: "${{ secrets.COSIGN_PASSWORD }}"
           
       - name: verify
-        run: cosign verify --key cosign.pub ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build-and-push.outputs.digest }}
+        run: cosign verify --key .github/workflows/cosign.pub ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build-and-push.outputs.digest }}
 
