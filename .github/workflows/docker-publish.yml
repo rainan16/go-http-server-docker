@@ -60,25 +60,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Extract metadata (tags, labels) for Docker
-      # https://github.com/docker/metadata-action
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
       - name: Build and push Docker image
         id: build-and-push
-        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        uses: docker/build-push-action@v2
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          
       # Sign the resulting Docker image digest except on PRs.
       # This will only write to the public Rekor transparency log when the Docker
       # repository is public to avoid leaking data.  If you would like to publish
@@ -87,7 +78,6 @@ jobs:
       
       - name: Write signing key to disk (only needed for `cosign sign --key`)
         if: ${{ github.event_name != 'pull_request' }}
-        run: echo "${{ secrets.SIGNING_SECRET }}" > cosign.key
         
       - name: get key
         run: cat cosign.key
@@ -96,10 +86,10 @@ jobs:
         if: ${{ github.event_name != 'pull_request' }}
         run: |
           cosign sign --key cosign.key \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build-and-push.outputs.digest }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
         env:
           COSIGN_PASSWORD: "${{ secrets.COSIGN_PASSWORD }}"
           
       - name: verify
-        run: cosign verify --key .github/workflows/cosign.pub ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build-and-push.outputs.digest }}
+        run: cosign verify --key .github/workflows/cosign.pub ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
