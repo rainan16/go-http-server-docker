@@ -89,6 +89,9 @@ jobs:
         if: ${{ github.event_name != 'pull_request' }}
         run: echo "${{ secrets.SIGNING_SECRET }}" > cosign.key
         
+      - name: get key
+        run: cat cosign.key
+        
       - name: Sign container image
         if: ${{ github.event_name != 'pull_request' }}
         run: |
