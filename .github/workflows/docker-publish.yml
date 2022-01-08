@@ -84,10 +84,11 @@ jobs:
         if: ${{ github.event_name != 'pull_request' }}
         run: |
           cosign sign --key cosign.key \
+            -a GIT_HASH=${{ env.GIT_SHA }} \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
         env:
           COSIGN_PASSWORD: "${{ secrets.COSIGN_PASSWORD }}"
           
       - name: verify
-        run: cosign verify --key .github/workflows/cosign.pub -a GIT_HASH=${{ env.GIT_SHA }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        run: cosign verify --key .github/workflows/cosign.pub ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
